@@ -14,6 +14,7 @@
   "settings_tesseract_path": "Tesseract Yolu:",
   "settings_deepl_api_key": "DeepL API Anahtarı:",
   "settings_target_language": "Hedef Dil:",
+  "settings_translation_service": "Çeviri Servisi:",
   "settings_interface_language": "Arayüz Dili:",
   "settings_font_size": "Yazı Tipi Boyutu:",
   "settings_font_color": "Yazı Tipi Rengi:",
@@ -61,5 +62,6 @@
   "settings_font_family": "Yazı Tipi Ailesi",
   "settings_font_bold": "Kalın",
   "settings_font_italic": "İtalik",
-  "settings_font_underline": "Altı Çizili"
+  "settings_font_underline": "Altı Çizili",
+  "error_translation": "Çeviri Hatası"
 }

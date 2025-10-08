@@ -14,6 +14,7 @@
   "settings_tesseract_path": "Tesseract パス:",
   "settings_deepl_api_key": "DeepL API キー:",
   "settings_target_language": "ターゲット言語:",
+  "settings_translation_service": "翻訳サービス:",
   "settings_interface_language": "インターフェース言語:",
   "settings_font_size": "フォントサイズ:",
   "settings_font_color": "フォント色:",
@@ -61,5 +62,6 @@
   "settings_font_family": "フォントファミリー",
   "settings_font_bold": "太字",
   "settings_font_italic": "斜体",
-  "settings_font_underline": "下線"
+  "settings_font_underline": "下線",
+  "error_translation": "翻訳エラー"
 }

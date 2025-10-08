@@ -14,6 +14,7 @@
   "settings_tesseract_path": "Tesseract 경로:",
   "settings_deepl_api_key": "DeepL API 키:",
   "settings_target_language": "대상 언어:",
+  "settings_translation_service": "번역 서비스:",
   "settings_interface_language": "인터페이스 언어:",
   "settings_font_size": "글꼴 크기:",
   "settings_font_color": "글꼴 색상:",
@@ -61,5 +62,6 @@
   "settings_font_family": "글꼴 패밀리",
   "settings_font_bold": "굵게",
   "settings_font_italic": "기울임",
-  "settings_font_underline": "밑줄"
+  "settings_font_underline": "밑줄",
+  "error_translation": "번역 오류"
 }

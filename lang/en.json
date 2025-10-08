@@ -14,6 +14,7 @@
   "settings_tesseract_path": "Tesseract Path:",
   "settings_deepl_api_key": "DeepL API Key:",
   "settings_target_language": "Target Language:",
+  "settings_translation_service": "Translation Service:",
   "settings_interface_language": "Interface Language:",
   "settings_font_size": "Font Size:",
   "settings_font_color": "Font Color:",
@@ -61,5 +62,6 @@
   "settings_font_family": "Font Family",
   "settings_font_bold": "Bold",
   "settings_font_italic": "Italic",
-  "settings_font_underline": "Underline"
+  "settings_font_underline": "Underline",
+  "error_translation": "Translation Error"
 }

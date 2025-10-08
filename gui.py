@@ -77,6 +77,7 @@ class SettingsWindow(tk.Toplevel):
         self.var_hedef_dil = tk.StringVar(self, value=get_key_from_value(DESTEKLENEN_HEDEF_DILLER, AYARLAR['hedef_dil']))
         self.var_arayuz_dili = tk.StringVar(self, value=DESTEKLENEN_ARAYUZ_DILLERI.get(AYARLAR['arayuz_dili']))
         self.var_baslangicta_baslat = tk.BooleanVar(self, value=AYARLAR['baslangicta_baslat'])
+        self.var_ceviri_servis = tk.StringVar(self, value=AYARLAR['ceviri_servis'])
         self.var_font_ailesi = tk.StringVar(self, value=AYARLAR['font_ailesi'])
         self.var_font_boyutu = tk.StringVar(self, value=str(AYARLAR['font_boyutu']))
         self.var_font_kalin = tk.BooleanVar(self, value=AYARLAR['font_kalin'])
@@ -143,19 +144,22 @@ class SettingsWindow(tk.Toplevel):
         ttk.Label(frame, text=get_lang('settings_target_language')).grid(row=2, column=0, sticky='w', padx=5, pady=5)
         ttk.Combobox(frame, textvariable=self.var_hedef_dil, values=list(DESTEKLENEN_HEDEF_DILLER.keys()), state="readonly").grid(row=2, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
 
-        ttk.Label(frame, text=get_lang('settings_interface_language')).grid(row=3, column=0, sticky='w', padx=5, pady=5)
-        ttk.Combobox(frame, textvariable=self.var_arayuz_dili, values=list(DESTEKLENEN_ARAYUZ_DILLERI.values()), state="readonly").grid(row=3, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
+        ttk.Label(frame, text=get_lang('settings_translation_service')).grid(row=3, column=0, sticky='w', padx=5, pady=5)
+        ttk.Combobox(frame, textvariable=self.var_ceviri_servis, values=['deepl', 'google'], state="readonly").grid(row=3, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
 
-        ttk.Label(frame, text=get_lang('settings_scan_interval')).grid(row=4, column=0, sticky='w', padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.var_kontrol_araligi, validate="key", validatecommand=self.validate_float).grid(row=4, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
+        ttk.Label(frame, text=get_lang('settings_interface_language')).grid(row=4, column=0, sticky='w', padx=5, pady=5)
+        ttk.Combobox(frame, textvariable=self.var_arayuz_dili, values=list(DESTEKLENEN_ARAYUZ_DILLERI.values()), state="readonly").grid(row=4, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
 
-        ttk.Label(frame, text=get_lang('settings_source_similarity_threshold')).grid(row=5, column=0, sticky='w', padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.var_kaynak_benzerlik_esigi, validate="key", validatecommand=self.validate_float).grid(row=5, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
+        ttk.Label(frame, text=get_lang('settings_scan_interval')).grid(row=5, column=0, sticky='w', padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.var_kontrol_araligi, validate="key", validatecommand=self.validate_float).grid(row=5, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
 
-        ttk.Label(frame, text=get_lang('settings_source_min_length')).grid(row=6, column=0, sticky='w', padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.var_kaynak_min_uzunluk, validate="key", validatecommand=self.validate_integer).grid(row=6, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
+        ttk.Label(frame, text=get_lang('settings_source_similarity_threshold')).grid(row=6, column=0, sticky='w', padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.var_kaynak_benzerlik_esigi, validate="key", validatecommand=self.validate_float).grid(row=6, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
 
-        ttk.Checkbutton(frame, text=get_lang('settings_start_on_launch'), variable=self.var_baslangicta_baslat).grid(row=7, column=0, columnspan=3, sticky='w', padx=5, pady=10)
+        ttk.Label(frame, text=get_lang('settings_source_min_length')).grid(row=7, column=0, sticky='w', padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.var_kaynak_min_uzunluk, validate="key", validatecommand=self.validate_integer).grid(row=7, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
+
+        ttk.Checkbutton(frame, text=get_lang('settings_start_on_launch'), variable=self.var_baslangicta_baslat).grid(row=8, column=0, columnspan=3, sticky='w', padx=5, pady=10)
 
     def populate_ocr_tab(self, frame):
         frame.columnconfigure(1, weight=1)
@@ -309,6 +313,7 @@ class SettingsWindow(tk.Toplevel):
         yeni_ayarlar = {
             'baslangicta_baslat': self.var_baslangicta_baslat.get(), 'tesseract_yolu': self.var_tesseract.get(), 'api_anahtari': self.var_api_key.get(),
             'hedef_dil': DESTEKLENEN_HEDEF_DILLER.get(self.var_hedef_dil.get()), 'arayuz_dili': get_key_from_value(DESTEKLENEN_ARAYUZ_DILLERI, self.var_arayuz_dili.get()),
+            'ceviri_servis': self.var_ceviri_servis.get(),
             'font_ailesi': self.var_font_ailesi.get(),
             'font_boyutu': int(self.var_font_boyutu.get()),
             'font_kalin': self.var_font_kalin.get(),

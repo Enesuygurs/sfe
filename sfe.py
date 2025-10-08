@@ -7,6 +7,7 @@ import numpy as np
 import mss
 import pytesseract
 import deepl
+import googletrans
 import keyboard
 import pystray
 from PIL import Image
@@ -19,7 +20,6 @@ gui_queue = queue.Queue()
 is_paused = False
 last_text = ""
 tray_icon = None
-translator = None
 icon_running = None
 icon_stopped = None
 ocr_allowed = None
@@ -65,14 +65,7 @@ def update_tray_menu():
     tray_icon.menu = new_menu
 
 def main_translation_loop():
-    global last_text, translator
-    try:
-        translator = deepl.Translator(AYARLAR['api_anahtari'])
-    except Exception as e:
-        print(f"HATA: DeepL Translator oluşturulamadı: {e}.")
-        gui_queue.put({'type': 'show_message_error', 'title': get_lang('error_title_deepl'), 'body': get_lang('error_body_deepl_key')})
-        translator = None
-
+    global last_text
     with mss.mss() as sct:
         while True:
             try:
@@ -149,18 +142,29 @@ def main_translation_loop():
                         if benzerlik < AYARLAR['kaynak_metin_benzerlik_esigi']:
                             print(">>> KARAR: YENİ METİN! Çeviriye gönderiliyor...")
                             last_text = temiz_metin
-                            if translator:
-                                try:
+                            try:
+                                if not is_paused:
+                                    print(f"API'ye Gönderiliyor: '{temiz_metin}'")
+                                    if AYARLAR['ceviri_servis'] == 'deepl':
+                                        # DeepL için translator oluştur
+                                        temp_translator = deepl.Translator(AYARLAR['api_anahtari'])
+                                        cevirilmis = temp_translator.translate_text(temiz_metin, target_lang=AYARLAR['hedef_dil'])
+                                        ceviri_sonucu = cevirilmis.text
+                                    elif AYARLAR['ceviri_servis'] == 'google':
+                                        # Google Translate için translator oluştur
+                                        temp_translator = googletrans.Translator()
+                                        hedef_dil_iso = AYARLAR['hedef_dil'].lower()
+                                        cevirilmis = temp_translator.translate(temiz_metin, dest=hedef_dil_iso)
+                                        ceviri_sonucu = cevirilmis.text
+                                    else:
+                                        ceviri_sonucu = temiz_metin  # fallback
+                                    print(f"ÇEVİRİ SONUCU: '{ceviri_sonucu}'")
                                     if not is_paused:
-                                        print(f"API'ye Gönderiliyor: '{temiz_metin}'")
-                                        cevirilmis = translator.translate_text(temiz_metin, target_lang=AYARLAR['hedef_dil'])
-                                        print(f"ÇEVİRİ SONUCU: '{cevirilmis.text}'")
-                                        if not is_paused:
-                                            gui_queue.put({'type': 'update_text', 'text': cevirilmis.text})
-                                except Exception as e:
-                                    print(f"Çeviri hatası: {e}")
-                                    if not is_paused:
-                                        gui_queue.put({'type': 'update_text', 'text': f"[{get_lang('error_translation')}]"})
+                                        gui_queue.put({'type': 'update_text', 'text': ceviri_sonucu})
+                            except Exception as e:
+                                print(f"Çeviri hatası: {e}")
+                                if not is_paused:
+                                    gui_queue.put({'type': 'update_text', 'text': f"[{get_lang('error_translation')}]"})
                         else:
                             print(">>> KARAR: Benzer metin, çeviri atlanıyor.")
 

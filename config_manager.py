@@ -31,7 +31,7 @@ def load_interface_language(lang_code):
         with open(lang_file_path, 'r', encoding='utf-8') as f: LANG_STRINGS = json.load(f)
 
 def save_settings():
-    config['Genel'] = {'tesseract_yolu': SETTINGS['tesseract_yolu'], 'api_anahtari': SETTINGS['api_anahtari'], 'arayuz_dili': SETTINGS['arayuz_dili'], 'hedef_dil': SETTINGS['hedef_dil'], 'baslangicta_baslat': str(SETTINGS['baslangicta_baslat'])}
+    config['Genel'] = {'tesseract_yolu': SETTINGS['tesseract_yolu'], 'api_anahtari': SETTINGS['api_anahtari'], 'arayuz_dili': SETTINGS['arayuz_dili'], 'hedef_dil': SETTINGS['hedef_dil'], 'baslangicta_baslat': str(SETTINGS['baslangicta_baslat']), 'ceviri_servis': SETTINGS['ceviri_servis']}
     config['Bolge'] = {'top': str(SETTINGS['top']), 'left': str(SETTINGS['left']), 'width': str(SETTINGS['width']), 'height': str(SETTINGS['height'])}
     config['OCR'] = {'isleme_modu': SETTINGS['isleme_modu'], 'esik_degeri': str(SETTINGS['esik_degeri']), 'otomatik_ters_cevirme': str(SETTINGS['otomatik_ters_cevirme']), 'otomatik_ters_cevirme_esigi': str(SETTINGS['otomatik_ters_cevirme_esigi']), 'renk_alt_sinir_h': str(SETTINGS['renk_alt_sinir_h']), 'renk_alt_sinir_s': str(SETTINGS['renk_alt_sinir_s']), 'renk_alt_sinir_v': str(SETTINGS['renk_alt_sinir_v']), 'renk_ust_sinir_h': str(SETTINGS['renk_ust_sinir_h']), 'renk_ust_sinir_s': str(SETTINGS['renk_ust_sinir_s']), 'renk_ust_sinir_v': str(SETTINGS['renk_ust_sinir_v'])}
     config['Arayuz'] = {
@@ -65,7 +65,7 @@ def load_settings():
     SETTINGS = {
         'tesseract_yolu': config.get('Genel', 'tesseract_yolu', fallback=''), 'api_anahtari': config.get('Genel', 'api_anahtari', fallback=''),
         'baslangicta_baslat': config.getboolean('Genel', 'baslangicta_baslat', fallback=True), 'arayuz_dili': config.get('Genel', 'arayuz_dili', fallback='TR'),
-        'hedef_dil': config.get('Genel', 'hedef_dil', fallback='TR'),
+        'hedef_dil': config.get('Genel', 'hedef_dil', fallback='TR'), 'ceviri_servis': config.get('Genel', 'ceviri_servis', fallback='deepl'),
         'top': config.getint('Bolge', 'top', fallback=0), 'left': config.getint('Bolge', 'left', fallback=0), 'width': config.getint('Bolge', 'width', fallback=0), 'height': config.getint('Bolge', 'height', fallback=0),
         'isleme_modu': config.get('OCR', 'isleme_modu', fallback='gri_esik'), 'esik_degeri': config.getint('OCR', 'esik_degeri', fallback=180),
         'otomatik_ters_cevirme': config.getboolean('OCR', 'otomatik_ters_cevirme', fallback=True), 'otomatik_ters_cevirme_esigi': config.getint('OCR', 'otomatik_ters_cevirme_esigi', fallback=127),

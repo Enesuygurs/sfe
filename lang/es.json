@@ -14,6 +14,7 @@
   "settings_tesseract_path": "Ruta de Tesseract:",
   "settings_deepl_api_key": "Clave API de DeepL:",
   "settings_target_language": "Idioma de Destino:",
+  "settings_translation_service": "Servicio de Traducción:",
   "settings_interface_language": "Idioma de la Interfaz:",
   "settings_font_size": "Tamaño de Fuente:",
   "settings_font_color": "Color de Fuente:",
@@ -61,5 +62,6 @@
   "settings_font_family": "Familia de fuentes",
   "settings_font_bold": "Negrita",
   "settings_font_italic": "Cursiva",
-  "settings_font_underline": "Subrayado"
+  "settings_font_underline": "Subrayado",
+  "error_translation": "Error de traducción"
 }
