@@ -14,6 +14,7 @@
   "settings_tesseract_path": "Путь к Tesseract:",
   "settings_deepl_api_key": "Ключ API DeepL:",
   "settings_target_language": "Целевой язык:",
+  "settings_translation_service": "Служба перевода:",
   "settings_interface_language": "Язык интерфейса:",
   "settings_font_size": "Размер шрифта:",
   "settings_font_color": "Цвет шрифта:",
@@ -61,5 +62,6 @@
   "settings_font_family": "Семейство шрифтов",
   "settings_font_bold": "Жирный",
   "settings_font_italic": "Курсив",
-  "settings_font_underline": "Подчеркнутый"
+  "settings_font_underline": "Подчеркнутый",
+  "error_translation": "Ошибка перевода"
 }
