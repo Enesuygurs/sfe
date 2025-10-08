@@ -5,6 +5,8 @@ import queue
 import keyboard
 import time
 import threading
+import os
+import sys
 from config_manager import (SETTINGS as AYARLAR, get_lang, save_settings, load_interface_language,
                            get_key_from_value, SUPPORTED_TARGET_LANGUAGES as DESTEKLENEN_HEDEF_DILLER,
                            SUPPORTED_INTERFACE_LANGUAGES as DESTEKLENEN_ARAYUZ_DILLERI, get_resource_path)
@@ -120,6 +122,9 @@ class SettingsWindow(tk.Toplevel):
 
         button_frame = ttk.Frame(self)
         button_frame.pack(padx=10, pady=(0, 10), fill='x')
+        ttk.Button(button_frame, text=get_lang('settings_button_export'), command=self.export_settings).pack(side='left', padx=5)
+        ttk.Button(button_frame, text=get_lang('settings_button_import'), command=self.import_settings).pack(side='left', padx=5)
+        ttk.Button(button_frame, text=get_lang('settings_button_reset'), command=self.reset_settings).pack(side='left', padx=5)
         ttk.Button(button_frame, text=get_lang('settings_button_save'), command=self.kaydet).pack(side='right', padx=5)
         ttk.Button(button_frame, text=get_lang('settings_button_cancel'), command=self.destroy).pack(side='right')
 
@@ -285,6 +290,59 @@ class SettingsWindow(tk.Toplevel):
             self.deiconify()
             self.lift()
             self.focus_force()
+
+    def export_settings(self):
+        from config_manager import export_settings
+        file_path = filedialog.asksaveasfilename(
+            title=get_lang('settings_export_title'),
+            defaultextension=".json",
+            filetypes=[(get_lang('settings_export_file_filter'), "*.json")]
+        )
+        if file_path:
+            success, error = export_settings(file_path)
+            if success:
+                messagebox.showinfo(get_lang('app_title'), get_lang('settings_export_success'), parent=self)
+            else:
+                messagebox.showerror(get_lang('app_title'), get_lang('settings_export_error', error=error), parent=self)
+
+    def import_settings(self):
+        from config_manager import import_settings
+        file_path = filedialog.askopenfilename(
+            title=get_lang('settings_import_title'),
+            filetypes=[(get_lang('settings_import_file_filter'), "*.json")]
+        )
+        if file_path:
+            success, error = import_settings(file_path)
+            if success:
+                messagebox.showinfo(get_lang('app_title'), get_lang('settings_import_success'), parent=self)
+                # Otomatik yeniden başlatma
+                self.restart_application()
+            else:
+                messagebox.showerror(get_lang('app_title'), get_lang('settings_import_error', error=error), parent=self)
+
+    def reset_settings(self):
+        from config_manager import reset_to_defaults
+        # Onay iste
+        if not messagebox.askyesno(get_lang('settings_reset_title'), get_lang('settings_reset_confirm'), parent=self):
+            return
+        
+        success, error = reset_to_defaults()
+        if success:
+            messagebox.showinfo(get_lang('app_title'), get_lang('settings_reset_success'), parent=self)
+            # Otomatik yeniden başlatma
+            self.restart_application()
+        else:
+            messagebox.showerror(get_lang('app_title'), get_lang('settings_reset_error', error=error), parent=self)
+
+    def restart_application(self):
+        """Uygulamayı yeniden başlatır"""
+        try:
+            # Mevcut süreci yeniden başlat
+            os.execl(sys.executable, sys.executable, *sys.argv)
+        except Exception as e:
+            print(f"Yeniden başlatma hatası: {e}")
+            # Fallback: Sadece pencereyi kapat
+            self.destroy()
 
     def kaydet(self):
         hotkeys = [self.var_alan_sec.get(), self.var_durdur_devam.get(), self.var_kapat.get()]
