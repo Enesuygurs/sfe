@@ -128,6 +128,14 @@ class SettingsWindow(tk.Toplevel):
         ttk.Button(button_frame, text=get_lang('settings_button_save'), command=self.kaydet).pack(side='right', padx=5)
         ttk.Button(button_frame, text=get_lang('settings_button_cancel'), command=self.destroy).pack(side='right')
 
+        # Pencereyi ekranın ortasında konumlandır
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f'{width}x{height}+{x}+{y}')
+
     def sadece_ondalikli(self, val):
         if val == "" or val == ".": return True
         try: float(val); return True
@@ -146,11 +154,11 @@ class SettingsWindow(tk.Toplevel):
         ttk.Label(frame, text=get_lang('settings_deepl_api_key')).grid(row=1, column=0, sticky='w', padx=5, pady=5)
         ttk.Entry(frame, textvariable=self.var_api_key, show="*").grid(row=1, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
 
-        ttk.Label(frame, text=get_lang('settings_target_language')).grid(row=2, column=0, sticky='w', padx=5, pady=5)
-        ttk.Combobox(frame, textvariable=self.var_hedef_dil, values=list(DESTEKLENEN_HEDEF_DILLER.keys()), state="readonly").grid(row=2, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
+        ttk.Label(frame, text=get_lang('settings_translation_service')).grid(row=2, column=0, sticky='w', padx=5, pady=5)
+        ttk.Combobox(frame, textvariable=self.var_ceviri_servis, values=['deepl', 'google'], state="readonly").grid(row=2, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
 
-        ttk.Label(frame, text=get_lang('settings_translation_service')).grid(row=3, column=0, sticky='w', padx=5, pady=5)
-        ttk.Combobox(frame, textvariable=self.var_ceviri_servis, values=['deepl', 'google'], state="readonly").grid(row=3, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
+        ttk.Label(frame, text=get_lang('settings_target_language')).grid(row=3, column=0, sticky='w', padx=5, pady=5)
+        ttk.Combobox(frame, textvariable=self.var_hedef_dil, values=list(DESTEKLENEN_HEDEF_DILLER.keys()), state="readonly").grid(row=3, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
 
         ttk.Label(frame, text=get_lang('settings_interface_language')).grid(row=4, column=0, sticky='w', padx=5, pady=5)
         ttk.Combobox(frame, textvariable=self.var_arayuz_dili, values=list(DESTEKLENEN_ARAYUZ_DILLERI.values()), state="readonly").grid(row=4, column=1, columnspan=2, sticky='ew', padx=5, pady=5)
