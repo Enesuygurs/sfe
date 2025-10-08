@@ -64,6 +64,10 @@ class SettingsWindow(tk.Toplevel):
         self.overlay = overlay_ref
         self.hotkey_callbacks = hotkey_callbacks
         self.ocr_event = ocr_event
+        
+        # Pencereyi geçici olarak şeffaf yap
+        self.attributes("-alpha", 0)
+        
         self.title(get_lang('settings_window_title'))
         self.resizable(False, False)
         self.attributes("-topmost", True)
@@ -130,11 +134,15 @@ class SettingsWindow(tk.Toplevel):
 
         # Pencereyi ekranın ortasında konumlandır
         self.update_idletasks()
+        self.update()
         width = self.winfo_width()
         height = self.winfo_height()
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
         self.geometry(f'{width}x{height}+{x}+{y}')
+        
+        # Pencereyi görünür yap
+        self.attributes("-alpha", 1)
 
     def sadece_ondalikli(self, val):
         if val == "" or val == ".": return True
