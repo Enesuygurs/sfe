@@ -45,12 +45,76 @@ def save_settings():
     config['Kisayollar'] = {'alan_sec': SETTINGS['alan_sec'], 'durdur_devam_et': SETTINGS['durdur_devam_et'], 'programi_kapat': SETTINGS['programi_kapat']}
     with open(CONFIG_FILE, 'w', encoding='utf-8') as configfile: config.write(configfile)
 
+def export_settings(file_path):
+    """Ayarları JSON dosyasına export eder"""
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(SETTINGS, f, indent=2, ensure_ascii=False)
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+def import_settings(file_path):
+    """Ayarları JSON dosyasından import eder"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            imported_settings = json.load(f)
+
+        # Import edilen ayarları mevcut ayarlarla birleştir
+        global SETTINGS
+        SETTINGS.update(imported_settings)
+
+        # Config dosyasını güncelle
+        save_settings()
+
+        # Arayüz dilini yeniden yükle
+        load_interface_language(SETTINGS['arayuz_dili'])
+
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+def reset_to_defaults():
+    """Ayarları varsayılan değerlere sıfırlar"""
+    try:
+        global SETTINGS, config
+        # Varsayılan ayarları yükle
+        SETTINGS = {
+            'tesseract_yolu': '', 'api_anahtari': '',
+            'baslangicta_baslat': True, 'arayuz_dili': 'TR',
+            'hedef_dil': 'TR', 'ceviri_servis': 'deepl',
+            'top': 0, 'left': 0, 'width': 0, 'height': 0,
+            'isleme_modu': 'renk_filtresi', 'esik_degeri': 180,
+            'otomatik_ters_cevirme': True, 'otomatik_ters_cevirme_esigi': 127,
+            'renk_alt_sinir_h': 0, 'renk_alt_sinir_s': 0, 'renk_alt_sinir_v': 180,
+            'renk_ust_sinir_h': 180, 'renk_ust_sinir_s': 30, 'renk_ust_sinir_v': 255,
+            'font_ailesi': 'Arial',
+            'font_boyutu': 20,
+            'font_kalin': True,
+            'font_italik': False,
+            'font_alti_cizili': False,
+            'font_rengi': 'white', 'arka_plan_rengi': 'black',
+            'seffaflik': 0.7, 'ekran_ust_bosluk': 30, 'kontrol_araligi': 0.4,
+            'ceviri_omru': 3.0, 'kaynak_metin_benzerlik_esigi': 0.9, 'kaynak_metin_min_uzunluk': 3,
+            'alan_sec': 'f8', 'durdur_devam_et': 'f9', 'programi_kapat': 'f10'
+        }
+
+        # Config dosyasını varsayılan değerlerle yeniden oluştur
+        save_settings()
+
+        # Arayüz dilini yeniden yükle
+        load_interface_language(SETTINGS['arayuz_dili'])
+
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
 def load_settings():
-    global SUPPORTED_TARGET_LANGUAGES, SUPPORTED_INTERFACE_LANGUAGES, SETTINGS
+    global SUPPORTED_TARGET_LANGUAGES, SUPPORTED_INTERFACE_LANGUAGES, SETTINGS, config
     with open(get_resource_path('target_languages.json'), 'r', encoding='utf-8') as f: SUPPORTED_TARGET_LANGUAGES = json.load(f)
     with open(get_resource_path('interface_languages.json'), 'r', encoding='utf-8') as f: SUPPORTED_INTERFACE_LANGUAGES = json.load(f)
     if not os.path.exists(CONFIG_FILE):
-        config['Genel'] = {'tesseract_yolu': '', 'api_anahtari': '', 'arayuz_dili': 'TR', 'hedef_dil': 'TR', 'baslangicta_baslat': 'True'}
+        config['Genel'] = {'tesseract_yolu': '', 'api_anahtari': '', 'arayuz_dili': 'TR', 'hedef_dil': 'TR', 'baslangicta_baslat': 'True', 'ceviri_servis': 'deepl'}
         config['Bolge'] = {'top': '0', 'left': '0', 'width': '0', 'height': '0'}
         config['OCR'] = {'isleme_modu': 'renk_filtresi', 'esik_degeri': '180', 'otomatik_ters_cevirme': 'True', 'otomatik_ters_cevirme_esigi': '127', 'renk_alt_sinir_h': '0', 'renk_alt_sinir_s': '0', 'renk_alt_sinir_v': '180', 'renk_ust_sinir_h': '180', 'renk_ust_sinir_s': '30', 'renk_ust_sinir_v': '255'}
         config['Arayuz'] = {
