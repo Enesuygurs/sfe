@@ -24,6 +24,27 @@ icon_running = None
 icon_stopped = None
 ocr_allowed = None
 
+def filter_ocr_text(text):
+    # Temizleme: Sadece harf, sayı, boşluk ve temel noktalama işaretlerini tut
+    cleaned = re.sub(r'[^a-zA-Z0-9\s\.\!\?\,\'\"]', '', text)
+    # Tekrarlayan karakterleri azalt (3+ aynı karakteri 2'ye düşür)
+    cleaned = re.sub(r'(.)\1{2,}', r'\1\1', cleaned)
+    cleaned = cleaned.strip()
+    if not cleaned:
+        return None
+    
+    # Kelime sayısı kontrolü (en az 2 kelime)
+    words = cleaned.split()
+    if len(words) < 2:
+        return None
+    
+    # Özel karakter oranı kontrolü (%30'dan fazla özel karakter varsa atla)
+    special_chars = sum(1 for c in cleaned if not c.isalnum() and not c.isspace())
+    if len(cleaned) > 0 and special_chars / len(cleaned) > 0.3:
+        return None
+    
+    return cleaned
+
 def register_hotkeys():
     keyboard.unhook_all()
     keyboard.add_hotkey(AYARLAR['durdur_devam_et'], toggle_pause)
@@ -129,9 +150,37 @@ def main_translation_loop():
                             binary_type = cv2.THRESH_BINARY if ters_cevir else cv2.THRESH_BINARY_INV
                             _, islenmis_img = cv2.threshold(gri_img, AYARLAR['esik_degeri'], 255, binary_type)
 
-                    okunan_metin = pytesseract.image_to_string(islenmis_img, lang='eng')
+                    # OCR ile metin çıkarımı ve güven kontrolü
+                    data = pytesseract.image_to_data(islenmis_img, lang='eng', output_type=pytesseract.Output.DICT)
+                    texts = data['text']
+                    confidences = data['conf']
+                    
+                    # Geçerli güven skorlarını al (boşluklar -1, anlamlı metinler >0)
+                    valid_confidences = [c for c in confidences if c > 0]
+                    if valid_confidences:
+                        avg_conf = sum(valid_confidences) / len(valid_confidences)
+                        print(f"OCR Güven: {avg_conf:.1f}%")
+                        if avg_conf < 70:
+                            print("Filtre: OCR güven düşük, metin atlanıyor.")
+                            time.sleep(AYARLAR['kontrol_araligi'])
+                            continue
+                    else:
+                        print("Filtre: Geçerli OCR metni bulunamadı.")
+                        time.sleep(AYARLAR['kontrol_araligi'])
+                        continue
+                    
+                    okunan_metin = ' '.join([t for t in texts if t.strip()])
                     temiz_metin = okunan_metin.strip().replace('\n', ' ')
                     print(f"OCR Ham Sonuç: '{temiz_metin}'")
+
+                    # Ek filtreleme: Gürültülü metinleri temizle ve doğrula
+                    filtered_text = filter_ocr_text(temiz_metin)
+                    if not filtered_text:
+                        print("Filtre: Metin filtreden geçemedi, atlanıyor.")
+                        time.sleep(AYARLAR['kontrol_araligi'])
+                        continue
+                    temiz_metin = filtered_text
+                    print(f"OCR Filtrelenmiş Sonuç: '{temiz_metin}'")
 
                     if temiz_metin and len(temiz_metin) >= AYARLAR['kaynak_metin_min_uzunluk']:
                         print(f"Filtre: Minimum uzunluk ({AYARLAR['kaynak_metin_min_uzunluk']}) geçildi.")
