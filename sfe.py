@@ -30,17 +30,17 @@ def filter_ocr_text(text):
     # Tekrarlayan karakterleri azalt (3+ aynı karakteri 2'ye düşür)
     cleaned = re.sub(r'(.)\1{2,}', r'\1\1', cleaned)
     cleaned = cleaned.strip()
+    # Başındaki rakamları ve takip eden boşlukları kaldır
+    cleaned = re.sub(r'^\d+\s*', '', cleaned)
     if not cleaned:
         return None
     
-    # Kelime sayısı kontrolü (en az 2 kelime)
-    words = cleaned.split()
-    if len(words) < 2:
-        return None
+    # Kelime sayısı kontrolü kaldırıldı - kısa anlamlı metinlere izin ver
     
-    # Özel karakter oranı kontrolü (%30'dan fazla özel karakter varsa atla)
+    # Özel karakter oranı kontrolü (kısa metinler için daha toleranslı)
     special_chars = sum(1 for c in cleaned if not c.isalnum() and not c.isspace())
-    if len(cleaned) > 0 and special_chars / len(cleaned) > 0.3:
+    threshold = 0.5 if len(cleaned) < 10 else 0.3  # Kısa metinler için %50'ye kadar izin ver
+    if len(cleaned) > 0 and special_chars / len(cleaned) > threshold:
         return None
     
     return cleaned
