@@ -16,101 +16,6 @@ from difflib import SequenceMatcher
 from config_manager import SETTINGS as AYARLAR, get_lang, get_resource_path, load_interface_language
 from gui import GuiManager
 
-def clean_ocr_text(text):
-    """OCR sonucundaki gereksiz karakterleri ve gürültüyü temizler"""
-    if not text:
-        return ""
-    
-    # Başlangıç ve sondaki boşlukları temizle
-    text = text.strip()
-    
-    # Çoklu boşlukları tek boşluğa çevir
-    text = re.sub(r'\s+', ' ', text)
-    
-    # Başında ve sonunda gereksiz karakterleri temizle
-    text = re.sub(r'^[^\w\s]+|[^\w\s]+$', '', text)
-    
-    # Tekrar eden gereksiz karakterleri temizle (örn: "yy", "xx", "---")
-    text = re.sub(r'([^a-zA-Z0-9\s])\1{2,}', r'\1', text)  # 3+ tekrar eden özel karakterler
-    text = re.sub(r'([a-zA-Z])\1{3,}', r'\1\1', text)     # 4+ tekrar eden harfler -> 2'ye düşür
-    
-    # Sonda tekrar eden 1-2 karakter gruplarını temizle (yy, xx, ll gibi)
-    text = re.sub(r'\s+([a-zA-Z])\1+\s*$', '', text)      # Sonda "yy", "xx" gibi
-    text = re.sub(r'\s+([a-zA-Z]{1,2})\s*$', lambda m: '' if len(set(m.group(1).lower())) <= 1 else m.group(0), text)
-    
-    # Çoklu nokta ve tire işaretlerini temizle
-    text = re.sub(r'\.{3,}', '...', text)  # 3'ten fazla nokta -> 3 nokta
-    text = re.sub(r'-{3,}', '---', text)   # 3'ten fazla tire -> 3 tire
-    
-    # Sadece noktalama işareti olan satırları temizle
-    if re.match(r'^[^\w\s]*$', text):
-        return ""
-    
-    # OCR'ın sık algıladığı gereksiz pattern'leri temizle
-    text = re.sub(r'\s+[|]{1,}\s*$', '', text)  # Sonda pipe karakterleri
-    text = re.sub(r'\s+[_]{1,}\s*$', '', text)  # Sonda underscore karakterleri
-    
-    return text.strip()
-
-def validate_text(text):
-    """Metnin çeviri için uygun olup olmadığını kontrol eder"""
-    if not text or len(text.strip()) < 3:
-        return False, "Çok kısa metin"
-    
-    text = text.strip()
-    
-    # Alfabe karakteri oranını kontrol et
-    alphabet_chars = len(re.findall(r'[a-zA-Z]', text))
-    total_chars = len(text.replace(' ', ''))
-    
-    if total_chars == 0:
-        return False, "Boş metin"
-    
-    alphabet_ratio = alphabet_chars / total_chars
-    
-    # En az %40 alfabe karakteri olmalı
-    if alphabet_ratio < 0.4:
-        return False, f"Düşük alfabe oranı ({alphabet_ratio:.2f})"
-    
-    # Çok fazla özel karakter varsa reddet
-    special_chars = len(re.findall(r'[^\w\s.,!?;:\'"-]', text))
-    special_ratio = special_chars / total_chars
-    
-    if special_ratio > 0.3:
-        return False, f"Çok fazla özel karakter ({special_ratio:.2f})"
-    
-    # Sadece tekrar eden karakterlerden oluşmuş metinleri reddet
-    unique_chars = len(set(text.replace(' ', '').lower()))
-    if unique_chars < 3:
-        return False, "Çok az benzersiz karakter"
-    
-    # Kelime sayısı kontrolü - En az 1 anlamlı kelime (3+ karakter) olmalı
-    words = text.split()
-    meaningful_words = [w for w in words if len(w.strip('.,!?;:\'"-')) >= 3]
-    if len(meaningful_words) < 1:
-        return False, "Anlamlı kelime bulunamadı"
-    
-    # OCR'ın sık yaptığı hataları kontrol et
-    error_patterns = [
-        r'^[^a-zA-Z]*$',           # Sadece sayı ve özel karakterler
-        r'[|]{2,}',                # Çoklu pipe karakteri
-        r'[_]{3,}',                # Çoklu underscore
-        r'[.]{4,}',                # Çoklu nokta (4'ten fazla)
-        r'^[-.,:;!?]{2,}',         # Başlangıçta çoklu noktalama
-        r'^[A-Z]{5,}$',            # Sadece büyük harf (5+ karakter)
-        r'[^\x00-\x7F]{3,}',       # ASCII olmayan 3+ karakter grubu
-    ]
-    
-    for pattern in error_patterns:
-        if re.search(pattern, text):
-            return False, f"OCR hatası pattern tespit edildi"
-    
-    # Sondaki gereksiz karakterleri kontrol et
-    if re.search(r'\s+[a-zA-Z]\s*$', text):
-        return False, "Sonda gereksiz tek karakter"
-    
-    return True, "Geçerli"
-
 gui_queue = queue.Queue()
 is_paused = False
 last_text = ""
@@ -225,18 +130,8 @@ def main_translation_loop():
                             _, islenmis_img = cv2.threshold(gri_img, AYARLAR['esik_degeri'], 255, binary_type)
 
                     okunan_metin = pytesseract.image_to_string(islenmis_img, lang='eng')
-                    ham_metin = okunan_metin.strip().replace('\n', ' ')
-                    print(f"OCR Ham Sonuç: '{ham_metin}'")
-                    
-                    # OCR sonucunu temizle
-                    temiz_metin = clean_ocr_text(ham_metin)
-                    print(f"OCR Temizlenmiş: '{temiz_metin}'")
-                    
-                    # Metin validasyonu
-                    is_valid, validation_reason = validate_text(temiz_metin)
-                    if not is_valid:
-                        print(f"Filtre: Metin reddedildi - {validation_reason}")
-                        continue
+                    temiz_metin = okunan_metin.strip().replace('\n', ' ')
+                    print(f"OCR Ham Sonuç: '{temiz_metin}'")
 
                     if temiz_metin and len(temiz_metin) >= AYARLAR['kaynak_metin_min_uzunluk']:
                         print(f"Filtre: Minimum uzunluk ({AYARLAR['kaynak_metin_min_uzunluk']}) geçildi.")
