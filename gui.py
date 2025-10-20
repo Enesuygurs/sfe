@@ -25,6 +25,11 @@ class CaptureOverlay(tk.Toplevel):
         self._current_opacity = None
         self._clickthrough_enabled = False
         self._desired_visible = False
+        # Transparent color aynı arka plan rengine ayarla (tüm pixeller geçirgen)
+        try:
+            self.attributes("-transparentcolor", "#000000")
+        except tk.TclError:
+            pass
         self.after(0, self._initialize_window)
 
     def _initialize_window(self):
@@ -36,18 +41,29 @@ class CaptureOverlay(tk.Toplevel):
         if self._clickthrough_enabled or os.name != "nt":
             return
         try:
+            self.update_idletasks()
             hwnd = self.winfo_id()
+            if not hwnd:
+                print("Click-through: hwnd alınamadı")
+                return
+            
             GWL_EXSTYLE = -20
             WS_EX_LAYERED = 0x00080000
             WS_EX_TRANSPARENT = 0x00000020
-            ctypes.windll.user32.SetWindowLongW(
-                hwnd,
-                GWL_EXSTYLE,
-                ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT
-            )
+            
+            current_style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+            new_style = current_style | WS_EX_LAYERED | WS_EX_TRANSPARENT
+            result = ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, new_style)
+            
+            if result == 0:
+                error_code = ctypes.get_last_error()
+                print(f"SetWindowLongW başarısız (error: {error_code})")
+                return
+            
             self._clickthrough_enabled = True
+            print(f"Click-through etkinleştirildi: hwnd={hwnd}")
         except Exception as exc:
-            print(f"Overlay click-through ayarlanamadı: {exc}")
+            print(f"Overlay click-through ayarlanamadı: {type(exc).__name__}: {exc}")
 
     def _apply_opacity(self):
         opacity = max(0.0, min(1.0, AYARLAR.get('tarama_arkaplan_opaklik', 0.55)))
@@ -56,9 +72,19 @@ class CaptureOverlay(tk.Toplevel):
         self._current_opacity = opacity
         self.attributes("-alpha", opacity)
         if os.name == 'nt':
-            hwnd = self.winfo_id()
-            LWA_ALPHA = 0x00000002
-            ctypes.windll.user32.SetLayeredWindowAttributes(hwnd, 0, int(opacity * 255), LWA_ALPHA)
+            try:
+                self.update_idletasks()
+                hwnd = self.winfo_id()
+                if not hwnd:
+                    return
+                
+                LWA_ALPHA = 0x00000002
+                alpha_value = int(opacity * 255)
+                result = ctypes.windll.user32.SetLayeredWindowAttributes(hwnd, 0, alpha_value, LWA_ALPHA)
+                if result:
+                    print(f"Layered window alpha ayarlandı: {alpha_value}")
+            except Exception as exc:
+                print(f"Opacity ayarlanamadı: {type(exc).__name__}: {exc}")
 
     def update_region(self):
         self._apply_clickthrough()
