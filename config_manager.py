@@ -40,7 +40,7 @@ def save_settings():
         'font_rengi': SETTINGS['font_rengi'], 'arka_plan_rengi': SETTINGS['arka_plan_rengi'], 'seffaflik': str(SETTINGS['seffaflik']),
         'ekran_ust_bosluk': str(SETTINGS['ekran_ust_bosluk']), 'kontrol_araligi': str(SETTINGS['kontrol_araligi']),
         'ceviri_omru': str(SETTINGS['ceviri_omru']), 'kaynak_metin_benzerlik_esigi': str(SETTINGS['kaynak_metin_benzerlik_esigi']),
-        'kaynak_metin_min_uzunluk': str(SETTINGS['kaynak_metin_min_uzunluk'])
+        'kaynak_metin_min_uzunluk': str(SETTINGS['kaynak_metin_min_uzunluk']), 'tarama_arkaplan_opaklik': str(SETTINGS['tarama_arkaplan_opaklik'])
     }
     config['Kisayollar'] = {'alan_sec': SETTINGS['alan_sec'], 'durdur_devam_et': SETTINGS['durdur_devam_et'], 'programi_kapat': SETTINGS['programi_kapat']}
     with open(CONFIG_FILE, 'w', encoding='utf-8') as configfile: config.write(configfile)
@@ -96,6 +96,7 @@ def reset_to_defaults():
             'font_rengi': 'white', 'arka_plan_rengi': 'black',
             'seffaflik': 0.7, 'ekran_ust_bosluk': 30, 'kontrol_araligi': 0.4,
             'ceviri_omru': 3.0, 'kaynak_metin_benzerlik_esigi': 0.9, 'kaynak_metin_min_uzunluk': 3,
+            'tarama_arkaplan_opaklik': 0.55,
             'alan_sec': 'f8', 'durdur_devam_et': 'f9', 'programi_kapat': 'f10'
         }
 
@@ -121,7 +122,7 @@ def load_settings():
             'font_ailesi': 'Arial', 'font_boyutu': '20', 'font_kalin': 'True', 'font_italik': 'False', 'font_alti_cizili': 'False',
             'font_rengi': 'white', 'arka_plan_rengi': 'black', 'seffaflik': '0.7',
             'ekran_ust_bosluk': '30', 'kontrol_araligi': '0.4', 'ceviri_omru': '3.0',
-            'kaynak_metin_benzerlik_esigi': '0.9', 'kaynak_metin_min_uzunluk': '3'
+            'kaynak_metin_benzerlik_esigi': '0.9', 'kaynak_metin_min_uzunluk': '3', 'tarama_arkaplan_opaklik': '0.55'
         }
         config['Kisayollar'] = {'alan_sec': 'f8', 'durdur_devam_et': 'f9', 'programi_kapat': 'f10'}
         with open(CONFIG_FILE, 'w', encoding='utf-8') as configfile: config.write(configfile)
@@ -143,6 +144,7 @@ def load_settings():
         'font_rengi': config.get('Arayuz', 'font_rengi', fallback='white'), 'arka_plan_rengi': config.get('Arayuz', 'arka_plan_rengi', fallback='black'),
         'seffaflik': config.getfloat('Arayuz', 'seffaflik', fallback=0.7), 'ekran_ust_bosluk': config.getint('Arayuz', 'ekran_ust_bosluk', fallback=30), 'kontrol_araligi': config.getfloat('Arayuz', 'kontrol_araligi', fallback=0.4),
         'ceviri_omru': config.getfloat('Arayuz', 'ceviri_omru', fallback=3.0), 'kaynak_metin_benzerlik_esigi': config.getfloat('Arayuz', 'kaynak_metin_benzerlik_esigi', fallback=0.9), 'kaynak_metin_min_uzunluk': config.getint('Arayuz', 'kaynak_metin_min_uzunluk', fallback=3),
+        'tarama_arkaplan_opaklik': config.getfloat('Arayuz', 'tarama_arkaplan_opaklik', fallback=0.55),
         'alan_sec': config.get('Kisayollar', 'alan_sec', fallback='f8'), 'durdur_devam_et': config.get('Kisayollar', 'durdur_devam_et', fallback='f9'), 'programi_kapat': config.get('Kisayollar', 'programi_kapat', fallback='f10')
     }
     load_interface_language(SETTINGS['arayuz_dili'])

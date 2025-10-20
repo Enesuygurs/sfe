@@ -5,12 +5,76 @@ import queue
 import keyboard
 import time
 import threading
+import ctypes
 import os
 import sys
 from config_manager import (SETTINGS as AYARLAR, get_lang, save_settings, load_interface_language,
                            get_key_from_value, SUPPORTED_TARGET_LANGUAGES as DESTEKLENEN_HEDEF_DILLER,
                            SUPPORTED_INTERFACE_LANGUAGES as DESTEKLENEN_ARAYUZ_DILLERI, get_resource_path)
 from ocr_tester import OCRDetectionTool
+
+class CaptureOverlay(tk.Toplevel):
+    """Semi-transparent overlay that darkens the OCR capture region without blocking clicks."""
+
+    def __init__(self, master):
+        super().__init__(master)
+        self.withdraw()
+        self.overrideredirect(True)
+        self.configure(bg="#000000")
+        self.attributes("-topmost", True)
+        self._current_opacity = None
+        self._clickthrough_enabled = False
+        self.after(0, self._initialize_window)
+
+    def _initialize_window(self):
+        self.update_idletasks()
+        self._apply_clickthrough()
+        self.update_region()
+
+    def _apply_clickthrough(self):
+        if self._clickthrough_enabled or os.name != "nt":
+            return
+        try:
+            hwnd = self.winfo_id()
+            GWL_EXSTYLE = -20
+            WS_EX_LAYERED = 0x00080000
+            WS_EX_TRANSPARENT = 0x00000020
+            ctypes.windll.user32.SetWindowLongW(
+                hwnd,
+                GWL_EXSTYLE,
+                ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED | WS_EX_TRANSPARENT
+            )
+            self._clickthrough_enabled = True
+        except Exception as exc:
+            print(f"Overlay click-through ayarlanamadı: {exc}")
+
+    def _apply_opacity(self):
+        opacity = max(0.0, min(1.0, AYARLAR.get('tarama_arkaplan_opaklik', 0.55)))
+        if opacity == self._current_opacity:
+            return
+        self._current_opacity = opacity
+        self.attributes("-alpha", opacity)
+        if os.name == 'nt':
+            hwnd = self.winfo_id()
+            LWA_ALPHA = 0x00000002
+            ctypes.windll.user32.SetLayeredWindowAttributes(hwnd, 0, int(opacity * 255), LWA_ALPHA)
+
+    def update_region(self):
+        self._apply_clickthrough()
+        self._apply_opacity()
+        width = AYARLAR.get('width', 0)
+        height = AYARLAR.get('height', 0)
+        left = AYARLAR.get('left', 0)
+        top = AYARLAR.get('top', 0)
+        if width < 10 or height < 10:
+            self.withdraw()
+            return
+        self.geometry(f"{width}x{height}+{left}+{top}")
+        self.deiconify()
+        self.lift()
+
+    def hide(self):
+        self.withdraw()
 
 class GuiManager:
     def __init__(self, gui_queue, hotkey_callbacks, ocr_event):
@@ -19,8 +83,10 @@ class GuiManager:
         self.ocr_event = ocr_event
         self.root = ThemedTk(theme="arc")
         self.root.withdraw()
+        self.capture_overlay = CaptureOverlay(self.root)
         self.overlay = OverlayGUI(self.root)
         self.settings_window = None
+        self.root.after(200, self.capture_overlay.update_region)
         self.root.after(100, self.process_queue)
         self.root.mainloop()
 
@@ -34,8 +100,10 @@ class GuiManager:
                 self.open_settings_window()
             elif msg_type == 'open_selector':
                 should_resume = message.get('should_resume', False)
+                self.capture_overlay.hide()
                 selector = AreaSelector(self.root)
                 self.root.wait_window(selector)
+                self.capture_overlay.update_region()
                 if should_resume:
                     self.hotkey_callbacks['toggle']()
             elif msg_type == 'show_message_info':
@@ -54,14 +122,15 @@ class GuiManager:
         if self.settings_window and self.settings_window.winfo_exists():
             self.settings_window.lift()
             return
-        self.settings_window = SettingsWindow(self.root, self.overlay, self.hotkey_callbacks, self.ocr_event)
+        self.settings_window = SettingsWindow(self.root, self.overlay, self.capture_overlay, self.hotkey_callbacks, self.ocr_event)
         self.root.wait_window(self.settings_window)
         self.settings_window = None
 
 class SettingsWindow(tk.Toplevel):
-    def __init__(self, master, overlay_ref, hotkey_callbacks, ocr_event):
+    def __init__(self, master, overlay_ref, capture_overlay, hotkey_callbacks, ocr_event):
         super().__init__(master)
         self.overlay = overlay_ref
+        self.capture_overlay = capture_overlay
         self.hotkey_callbacks = hotkey_callbacks
         self.ocr_event = ocr_event
         
@@ -405,6 +474,7 @@ class SettingsWindow(tk.Toplevel):
         AYARLAR.update(yeni_ayarlar)
         save_settings()
         if self.overlay.winfo_exists(): self.overlay.apply_settings()
+        if self.capture_overlay: self.capture_overlay.update_region()
         yeni_kisayollar = (AYARLAR['durdur_devam_et'], AYARLAR['programi_kapat'], AYARLAR['alan_sec'])
         eski_kisayollar = (eski_ayarlar['durdur_devam_et'], eski_ayarlar['programi_kapat'], eski_ayarlar['alan_sec'])
         if yeni_kisayollar != eski_kisayollar: self.hotkey_callbacks['register']()
