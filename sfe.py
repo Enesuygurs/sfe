@@ -55,6 +55,7 @@ def toggle_pause(*args):
     global is_paused
     is_paused = not is_paused
     print(f"\n--- Çeviri {'DURDURULDU' if is_paused else 'BAŞLATILDI'} ---")
+    gui_queue.put({'type': 'set_overlay', 'visible': not is_paused})
     update_tray_menu()
 
 def quit_program(*args):
@@ -236,6 +237,8 @@ if __name__ == "__main__":
 
     translation_thread = threading.Thread(target=main_translation_loop, daemon=True)
     translation_thread.start()
+
+    gui_queue.put({'type': 'set_overlay', 'visible': not is_paused})
 
     register_hotkeys()
 

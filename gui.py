@@ -24,6 +24,7 @@ class CaptureOverlay(tk.Toplevel):
         self.attributes("-topmost", True)
         self._current_opacity = None
         self._clickthrough_enabled = False
+        self._desired_visible = False
         self.after(0, self._initialize_window)
 
     def _initialize_window(self):
@@ -69,12 +70,26 @@ class CaptureOverlay(tk.Toplevel):
         if width < 10 or height < 10:
             self.withdraw()
             return
+        if not self._desired_visible:
+            self.withdraw()
+            return
         self.geometry(f"{width}x{height}+{left}+{top}")
         self.deiconify()
         self.lift()
 
     def hide(self):
+        self._desired_visible = False
         self.withdraw()
+
+    def set_active(self, is_active):
+        self._desired_visible = bool(is_active)
+        if not self._desired_visible:
+            self.withdraw()
+            return
+        self.update_region()
+
+    def is_active(self):
+        return self._desired_visible
 
 class GuiManager:
     def __init__(self, gui_queue, hotkey_callbacks, ocr_event):
@@ -86,6 +101,7 @@ class GuiManager:
         self.capture_overlay = CaptureOverlay(self.root)
         self.overlay = OverlayGUI(self.root)
         self.settings_window = None
+        self.overlay_visible = False
         self.root.after(200, self.capture_overlay.update_region)
         self.root.after(100, self.process_queue)
         self.root.mainloop()
@@ -100,12 +116,15 @@ class GuiManager:
                 self.open_settings_window()
             elif msg_type == 'open_selector':
                 should_resume = message.get('should_resume', False)
-                self.capture_overlay.hide()
+                if self.capture_overlay: self.capture_overlay.hide()
                 selector = AreaSelector(self.root)
                 self.root.wait_window(selector)
-                self.capture_overlay.update_region()
+                if self.capture_overlay: self.capture_overlay.set_active(self.overlay_visible)
                 if should_resume:
                     self.hotkey_callbacks['toggle']()
+            elif msg_type == 'set_overlay':
+                self.overlay_visible = bool(message.get('visible', False))
+                if self.capture_overlay: self.capture_overlay.set_active(self.overlay_visible)
             elif msg_type == 'show_message_info':
                 messagebox.showinfo(message.get('title'), message.get('body'))
             elif msg_type == 'show_message_error':
@@ -474,7 +493,7 @@ class SettingsWindow(tk.Toplevel):
         AYARLAR.update(yeni_ayarlar)
         save_settings()
         if self.overlay.winfo_exists(): self.overlay.apply_settings()
-        if self.capture_overlay: self.capture_overlay.update_region()
+        if self.capture_overlay: self.capture_overlay.set_active(self.capture_overlay.is_active())
         yeni_kisayollar = (AYARLAR['durdur_devam_et'], AYARLAR['programi_kapat'], AYARLAR['alan_sec'])
         eski_kisayollar = (eski_ayarlar['durdur_devam_et'], eski_ayarlar['programi_kapat'], eski_ayarlar['alan_sec'])
         if yeni_kisayollar != eski_kisayollar: self.hotkey_callbacks['register']()
